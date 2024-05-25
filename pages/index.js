@@ -1,44 +1,22 @@
 // pages/index.js
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, TextField, Box } from '@mui/material';
+import { Container, Typography, TextField, Box, Paper } from '@mui/material';
 import dynamic from 'next/dynamic';
 import { identifyStoppages } from '../utils/stoppageUtils';
 import Image from 'next/image';
+import gpsData from '../public/gpsData.json';
 
 const Map = dynamic(() => import('../components/Map'), { ssr: false });
 
 const Home = () => {
-  const [gpsData, setGpsData] = useState([]);
   const [stoppages, setStoppages] = useState([]);
-  const [threshold, setThreshold] = useState(5); // default threshold in minutes
-  const [loading, setLoading] = useState(true);
+  const [threshold, setThreshold] = useState(2); // Default threshold in minutes
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/gpsData.json');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        console.log('GPS data fetched:', data);
-        setGpsData(data);
-      } catch (error) {
-        console.error('Error fetching GPS data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (gpsData.length > 0) {
-      const stoppages = identifyStoppages(gpsData, threshold);
-      console.log('Stoppages identified:', stoppages);
-      setStoppages(stoppages);
-    }
-  }, [gpsData, threshold]);
+    const stoppages = identifyStoppages(gpsData, threshold);
+    console.log('Updated Stoppages:', stoppages);
+    setStoppages(stoppages);
+  }, [threshold]);
 
   return (
     <Container>
@@ -53,19 +31,28 @@ const Home = () => {
           label="Stoppage Threshold (minutes)"
           type="number"
           value={threshold}
-          onChange={(e) => {
-            const newThreshold = parseInt(e.target.value, 10);
-            console.log('Threshold changed:', newThreshold);
-            setThreshold(newThreshold);
-          }}
+          onChange={(e) => setThreshold(parseInt(e.target.value, 10))}
           variant="outlined"
         />
       </Box>
-      {loading ? (
-        <Typography variant="h6" align="center">Loading...</Typography>
-      ) : (
-        <Map gpsData={gpsData} stoppages={stoppages} />
-      )}
+      <Map gpsData={gpsData} stoppages={stoppages} />
+      <Box display="flex" justifyContent="center" mt={3} mb={3}>
+        <Paper elevation={3} sx={{ padding: 2 }}>
+          <Typography variant="h6" align="center">Legend</Typography>
+          <Box display="flex" alignItems="center" mb={1}>
+            <Box sx={{ width: 20, height: 20, backgroundColor: 'green', marginRight: 1 }} />
+            <Typography>Starting Point</Typography>
+          </Box>
+          <Box display="flex" alignItems="center" mb={1}>
+            <Box sx={{ width: 20, height: 20, backgroundColor: 'blue', marginRight: 1 }} />
+            <Typography>Ending Point</Typography>
+          </Box>
+          <Box display="flex" alignItems="center" mb={1}>
+            <Box sx={{ width: 20, height: 20, backgroundColor: 'red', marginRight: 1 }} />
+            <Typography>Stoppages</Typography>
+          </Box>
+        </Paper>
+      </Box>
       <footer>
         <Typography variant="body2" align="center" gutterBottom>
           Made by Rahul Bhutna

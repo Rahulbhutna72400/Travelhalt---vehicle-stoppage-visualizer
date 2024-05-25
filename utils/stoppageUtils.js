@@ -7,13 +7,18 @@ export const identifyStoppages = (data, thresholdMinutes) => {
     if (index === 0) return;
 
     const prevPoint = data[index - 1];
-    const timeDiff = (point.eventGeneratedTime - prevPoint.eventGeneratedTime) / 60000; // convert to minutes
+    const timeDiff = (new Date(point.timestamp) - new Date(prevPoint.timestamp)) / 60000; // Convert to minutes
 
     if (point.latitude === prevPoint.latitude && point.longitude === prevPoint.longitude) {
       if (!currentStoppage) {
-        currentStoppage = { ...point, reachTime: point.eventGeneratedTime, endTime: null, duration: 0 };
+        currentStoppage = { 
+          ...point, 
+          reachTime: point.timestamp, 
+          endTime: null, 
+          duration: 0 
+        };
       }
-      currentStoppage.endTime = point.eventGeneratedTime;
+      currentStoppage.endTime = point.timestamp;
       currentStoppage.duration += timeDiff;
     } else {
       if (currentStoppage && currentStoppage.duration >= thresholdMinutes) {
@@ -27,6 +32,6 @@ export const identifyStoppages = (data, thresholdMinutes) => {
     stoppages.push(currentStoppage);
   }
 
-  console.log('Identified stoppages:', stoppages);
+  console.log(`Threshold: ${thresholdMinutes} minutes, Stoppages:`, stoppages);
   return stoppages;
 };
